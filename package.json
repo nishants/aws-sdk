@@ -1,0 +1,12 @@
+{
+  "name": "aws-sdk",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/nishants/aws-sdk.git",
+  "author": "nishant <nishant.singh87@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "aws-sdk": "^2.903.0",
+    "dotenv": "^9.0.1"
+  }
+}
