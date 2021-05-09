@@ -57,12 +57,50 @@ const uploadFile = async (bucketName, fromFilePath, toBucketPath) => {
   });
 }
 
+const getAllFilesInDirRecursively = (dirPath) => {
+  return new Promise((resolve) => {
+    fs.readdir(dirPath, async (error, directFilesInDir) => {
+      const files = [];
+      const dir = [];
+      for(let file of directFilesInDir){
+        const absolutePath = path.join(dirPath, file);
+        const isDir = fs.statSync(absolutePath).isDirectory();
+        isDir ? dir.push(absolutePath) : files.push(absolutePath);
+      }
+      const nestedFiles = await Promise.all(dir.map(getAllFilesInDirRecursively));
+      const allRecursiveFiles = nestedFiles.reduce((all, files) => {
+        return [
+          ...all,
+          ...files
+        ]
+      }, [])
+      resolve([...files, ...allRecursiveFiles])
+    });
+  });
+}
+
+const uploadPathToBucket = async (bucketName, fromDirPath, toBucketPath) => {
+  const allFiles = await getAllFilesInDirRecursively(fromDirPath);
+  return Promise.all(allFiles.map((absoluteFilePath) => {
+    const relativePath = path.relative(fromDirPath, absoluteFilePath);
+    const pathInBucket = path.join(toBucketPath, relativePath);
+    return uploadFile(bucketName, absoluteFilePath, pathInBucket);
+  }));
+};
+
 (async() => {
-  const buckets = await getBuckets();
+  // const buckets = await getBuckets();
+  // console.log({buckets});
+  //
   const bucketName = 'nishants.in';
-  const fromFilePath = path.join(__dirname, "sample-files", "file1.txt");
-  const toBucketPath = "____/sample-uploads/file1.txt";
-  await uploadFile(bucketName, fromFilePath, toBucketPath);
-  console.log({buckets});
+  // const fromFilePath = path.join(__dirname, "sample-files", "file1.txt");
+  // const toBucketPath = "____/sample-uploads/file1.txt";
+  // await uploadFile(bucketName, fromFilePath, toBucketPath);
+
+  const toBucketPath = "____/sample-uploads/out-1";
+
+  const formDirPath = '/Users/dawn/projects/hello-nextjs/out';
+  const files = await uploadPathToBucket(bucketName, formDirPath, toBucketPath);
+  console.log({files})
 })();
 
