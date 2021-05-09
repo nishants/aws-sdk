@@ -3,6 +3,7 @@ require('dotenv').config()
 const AWS = require('aws-sdk');
 const fs = require('fs');
 const path = require('path');
+const getMimeTypeFor = require('./ExtensionMimeMap');
 
 AWS.config.credentials.accessKeyId = process.env.AWS_ACCESS_KEY_ID
 AWS.config.credentials.secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY
@@ -42,16 +43,20 @@ const uploadFile = async (bucketName, fromFilePath, toBucketPath) => {
       reject(err);
     });
 
+    const extension = "." + fromFilePath.split('.').pop();
+
     const uploadParams = {
       Bucket: bucketName,
       Key: toBucketPath,
-      Body: fileStream
+      Body: fileStream,
+      ContentType: getMimeTypeFor(extension)
     };
 
     s3.upload (uploadParams, function (err, data) {
       if (err) {
         return reject(err);
       }
+      console.log(`Uploaded : ${fromFilePath} to ${bucketName}:${toBucketPath}`, uploadParams.ContentType)
       resolve(data);
     });
   });
@@ -93,14 +98,14 @@ const uploadPathToBucket = async (bucketName, fromDirPath, toBucketPath) => {
   // console.log({buckets});
   //
   const bucketName = 'nishants.in';
-  // const fromFilePath = path.join(__dirname, "sample-files", "file1.txt");
-  // const toBucketPath = "____/sample-uploads/file1.txt";
+  // const fromFilePath = path.join(__dirname, "sample-files", "file2.txt");
+  // const toBucketPath = "____/sample-uploads/file3.txt";
   // await uploadFile(bucketName, fromFilePath, toBucketPath);
 
-  const toBucketPath = "____/sample-uploads/out-1";
+  const toBucketPath = "____/sample-uploads/out-4";
 
   const formDirPath = '/Users/dawn/projects/hello-nextjs/out';
-  const files = await uploadPathToBucket(bucketName, formDirPath, toBucketPath);
-  console.log({files})
+  const createdFiles = await uploadPathToBucket(bucketName, formDirPath, toBucketPath);
+  console.log({createdFiles})
 })();
 
